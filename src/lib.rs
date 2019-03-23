@@ -89,11 +89,27 @@ pub fn search_case_insensitive<'a>(query: &str, contents: &'a str) -> Vec<Match<
     results
 }
 
-pub fn search<'a>(query: &str, contents: &'a str, case_sensitive: bool) -> Vec<Match<'a>> {
+pub fn _search<'a>(query: &str, contents: &'a str, case_sensitive: bool) -> Vec<Match<'a>> {
     if case_sensitive {
         search_case_sensitive(query, contents)
     } else {
         search_case_insensitive(query, contents)
+    }
+}
+
+pub fn search_filter<'a>(contents: &'a str, filter_fn: &Fn(&(usize,&str)) -> bool) -> Vec<Match<'a>> {
+    contents.lines()
+        .enumerate()
+        .filter(filter_fn)
+        .map(|(line,text)| Match::new((line+1) as u64, text))
+        .collect()
+}
+
+pub fn search<'a>(query: &str, contents: &'a str, case_sensitive: bool) -> Vec<Match<'a>> {
+    if case_sensitive { 
+        search_filter(contents, &|(_,text): &(usize,&str)| text.contains(query))
+    } else { 
+        search_filter(contents, &|(_,text): &(usize,&str)| text.to_lowercase().contains(&query.to_lowercase()))
     }
 }
 
